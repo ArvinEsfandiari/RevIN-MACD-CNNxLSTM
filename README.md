@@ -1,1 +1,2 @@
-# Algotrading_RL
+# MACD-optimizer-new
+ 
