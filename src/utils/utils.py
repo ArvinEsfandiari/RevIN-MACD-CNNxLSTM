@@ -1,6 +1,3 @@
-from collections.abc import MutableMapping
-import pickle
-from hashlib import md5
 import pandas as pd
 
 def TFConvertor(data, newtf):

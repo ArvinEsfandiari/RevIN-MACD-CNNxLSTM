@@ -84,8 +84,8 @@ def data_cleaner(data):
 
 symbol = 'BTCUSD'
 timeframe = mt5.TIMEFRAME_M1  # 1-minute time frame
-start_date = datetime.datetime(2024, 9, 24)
-end_date = datetime.datetime(2024, 10, 7)
+start_date = datetime.datetime(2024, 9, 23)
+end_date = datetime.datetime(2024, 10, 21)
 
 
 # Fetch data
