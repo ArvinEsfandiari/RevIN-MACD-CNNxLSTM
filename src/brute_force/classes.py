@@ -330,133 +330,148 @@ class KalmanFilterEM:
 import pandas as pd
 import numpy as np
 
-class ImprovedBacktest:
-    def __init__(self, data, fast_period, slow_period, signal_period, price_type='close',
-                 sell_fee=0.115, buy_fee=0.115, initial_capital=100000.0):
+class MACDBacktester:
+    def __init__(self, data, fast_ema, slow_ema, signal_line, signal_price = 'close', real_price = 'close',
+                  sell_fee = 0.115, buy_fee = 0.115, initial_capital = 100):
         self.data = data.copy()
-        self.fast_period = fast_period
-        self.slow_period = slow_period
-        self.signal_period = signal_period
-        self.price_type = price_type
+        self.fast_ema = fast_ema
+        self.slow_ema = slow_ema
+        self.signal_line = signal_line
+        self.signal_price = signal_price
+        self.real_price = real_price
         self.sell_fee_percent = sell_fee / 100
         self.buy_fee_percent = buy_fee / 100
         self.initial_capital = initial_capital
         self.trades = []
-        self.data['position'] = 0
-
+        self.data['positions'] = 0
+        
     def calculate_macd(self):
-        """
-        Calculates the MACD indicator.
-        """
-        # Compute the EMAs
-        self.data['ema_fast'] = self.data[self.price_type].ewm(span=self.fast_period, adjust=False).mean()
-        self.data['ema_slow'] = self.data[self.price_type].ewm(span=self.slow_period, adjust=False).mean()
-        # Calculate MACD components
-        self.data['macd_line'] = self.data['ema_fast'] - self.data['ema_slow']
-        self.data['signal_line'] = self.data['macd_line'].ewm(span=self.signal_period, adjust=False).mean()
+        self.data['fast_ema'] = self.data[self.signal_price].ewm(span = self.fast_ema, adjust = False).mean()
+        self.data['slow_ema'] = self.data[self.signal_price].ewm(span = self.slow_ema, adjust = False).mean()
+        self.data['macd_line'] = self.data['fast_ema'] - self.data['slow_ema']
+        self.data['signal_line'] = self.data['macd_line'].ewm(span = self.signal_line, adjust = False).mean()
+
 
     def generate_signals(self):
         """
         Generates trading signals based on MACD crossover.
         """
+        threshold = 0.02
         self.data['signal'] = 0
-        self.data['signal'][self.signal_period:] = np.where(
-            self.data['macd_line'][self.signal_period:] > self.data['signal_line'][self.signal_period:], 1, 0)
-        # Generate trading positions by taking the difference of the signals
-        self.data['position'] = self.data['signal'].shift(1).fillna(0)
+        self.data['signal'] = np.where((self.data['macd_line'] - self.data['signal_line']) > threshold, 1, 0) # Buy signal
+        self.data['signal'] = np.where((self.data['macd_line'] - self.data['signal_line']) < -threshold, 0, self.data['signal']) # Sell signal
+        # Generation the position by shifting the signals
+        #self.data['positions'] = self.data['signal'].shift(1).fillna(0)
+        self.data['positions'] = self.data['signal']
 
     def backtest_strategy(self):
         """
-        Backtests the trading strategy.
+        Backtests the strategy and calculates performance metrics.
         """
-        self.calculate_macd()
-        self.generate_signals()
+        self.data['price'] = self.data[self.real_price]
+        self.data['positions'] = self.data['positions'].astype(int)
+        self.data['positions_diff'] = self.data['positions'].diff()
+        self.data['positions_diff'].fillna(0, inplace = True)
 
-        data = self.data.copy()
-        data['price'] = data[self.price_type]
+        # Initialize cash and holdings
+        self.data['cash'] = self.initial_capital
+        self.data['holdings'] = 0.0
+        self.data['total'] = self.initial_capital
 
+
+        # Variable to keep track of cash, holdings, trades
         cash = self.initial_capital
-        holdings = 0
-        portfolio_values = []
-        positions = []
+        holdings = 0.0
+        position = 0  # Current position (number of shares)
+        buy_price = 0.0
 
-        for i in range(len(data)):
-            price = data['price'].iloc[i]
-            position = data['position'].iloc[i]
-            date = data.index[i]
+        for idx, row in self.data.iterrows():
+            position_change = row['positions_diff']
+            price = row['price']
+            if position_change == 1: # Long position
+                # With regard to the randomness of market, I can decide how much of cash should spend for trading.
+                shares_to_buy = round(cash/(price),8)
+                shares_to_buy = shares_to_buy * (1-self.buy_fee_percent)
 
-            # Check for buy signal
-            if position > holdings:
-                units_to_buy = position - holdings
-                buy_price = price
-                total_cost = units_to_buy * buy_price * (1 + self.buy_fee_percent)
-                if cash >= total_cost:
+                if shares_to_buy > 0.00002:
+                    buy_price = round((cash/shares_to_buy),8) 
+                    total_cost = round(shares_to_buy * buy_price, 8)
                     cash -= total_cost
-                    holdings += units_to_buy
-                    self.trades.append({
-                        'type': 'buy',
-                        'units': units_to_buy,
-                        'price': buy_price,
-                        'fee': buy_price * units_to_buy * self.buy_fee_percent,
-                        'date': date
-                    })
+                    holdings += shares_to_buy * price
+                    position += shares_to_buy
 
-            # Check for sell signal
-            elif position < holdings:
-                units_to_sell = holdings - position
-                sell_price = price
-                total_proceeds = units_to_sell * sell_price * (1 - self.sell_fee_percent)
+
+            elif position_change ==-1 and position > 0: # position is the number of shares.
+                # Exit the long position
+                sell_price = price * (1-self.buy_fee_percent)
+                total_proceeds = position * sell_price
                 cash += total_proceeds
-                holdings -= units_to_sell
-                self.trades.append({
-                    'type': 'sell',
-                    'units': units_to_sell,
-                    'price': sell_price,
-                    'fee': sell_price * units_to_sell * self.sell_fee_percent,
-                    'date': date
-                })
+                holdings -= position * sell_price
+                # Calculate trade return
+                trade_return = (sell_price - buy_price)/buy_price * 100
+                self.trades.append(trade_return)
+                position = 0
+            else:
+                # Hold position
+                holdings = position * price
 
-            # Calculate total portfolio value
-            total_value = cash + holdings * price
-            portfolio_values.append(total_value)
-            positions.append(holdings)
 
-        self.data['portfolio_value'] = portfolio_values
-        self.data['holdings'] = positions
-        total_return = ((self.data['portfolio_value'].iloc[-1] - self.initial_capital) / self.initial_capital) * 100
-        return total_return
+            total = cash + holdings
+            self.data.at[idx, 'cash'] = cash
+            self.data.at[idx, 'holdings'] = holdings
+            self.data.at[idx, 'total'] = total
 
-    def print_trade_summary(self):
-        """
-        Prints a summary of all trades.
-        """
-        total_return_percent = 0
-        for i in range(len(self.trades)):
-            trade = self.trades[i]
-            if trade['type'] == 'buy':
-                try:
-                    sell_trade = next(
-                        t for t in self.trades[i+1:] if t['type'] == 'sell' and t['units'] == trade['units']
-                    )
-                    buy_cost = trade['units'] * trade['price'] + trade['fee']
-                    sell_proceeds = sell_trade['units'] * sell_trade['price'] - sell_trade['fee']
-                    trade_return = ((sell_proceeds - buy_cost) / buy_cost) * 100
-                    total_return_percent += trade_return
-                    print(f"Trade {i//2 +1}: Buy {trade['units']} units at {trade['price']:.2f} on {trade['date']}, "
-                          f"Sell at {sell_trade['price']:.2f} on {sell_trade['date']}, Return: {trade_return:.2f}%")
-                except StopIteration:
-                    continue  # No corresponding sell trade found yet
-        print(f"Total Return: {total_return_percent:.2f}%")
+        if position > 0 :
+            price = self.data.iloc[-1]['price']
+            sell_price = sell_price = price * shares_to_buy * (1-self.buy_fee_percent)
+            total_proceeds = position * sell_price
+            cash += total_proceeds
+            holdings -= position * sell_price
+            # Calculate trade return
+            trade_return = (sell_price - buy_price) / buy_price * 100
+            self.trades.append(trade_return)
+            position = 0
+            total = cash + holdings
+            self.data.at[self.data.index[-1], 'cash'] = cash
+            self.data.at[self.data.index[-1], 'holdings'] = holdings
+            self.data.at[self.data.index[-1], 'total'] = total
 
-    def get_total_return(self):
-        """
-        Returns the total return percentage.
-        """
-        return (self.data['portfolio_value'].iloc[-1] - self.initial_capital) / self.initial_capital * 100
+        self.results = self.data[['cash', 'holdings', 'total']]
+        self.results = self.data[['cash', 'holdings', 'total']]
 
-    def get_portfolio(self):
-        """
-        Returns the portfolio value over time.
-        """
-        return self.data[['portfolio_value', 'holdings']]
 
+    def get_performance_metrics(self):
+        """
+        Calculates and returns performance metrics.
+        """
+        if self.results is None:
+            print("Please run backtest_strategy() before calculating performance metrics.")
+            return None
+
+        total_return = (self.results['total'][-1] - self.initial_capital) / self.initial_capital * 100
+        returns = self.results['total'].pct_change().fillna(0)
+        annualized_return = ((1 + returns.mean()) ** 252 - 1) * 100  # Assuming daily returns
+        annualized_volatility = returns.std() * np.sqrt(252) * 100
+        sharpe_ratio = (returns.mean() / returns.std()) * np.sqrt(252) if returns.std() != 0 else np.nan
+        max_drawdown = ((self.results['total'].cummax() - self.results['total']) / self.results['total'].cummax()).max() * 100
+
+        metrics = {
+            'Total Return (%)': total_return,
+            'Annualized Return (%)': annualized_return,
+            'Annualized Volatility (%)': annualized_volatility,
+            'Sharpe Ratio': sharpe_ratio,
+            'Max Drawdown (%)': max_drawdown
+        }
+        return metrics
+
+    def print_trades(self):
+        """
+        Prints individual trade returns.
+        """
+        if not self.trades:
+            print("No trades have been executed.")
+            return
+        for idx, trade_return in enumerate(self.trades, 1):
+            print(f"Trade {idx}: Return = {trade_return:.2f}%")
+        total_return = sum(self.trades)
+        print(f"Total Return from trades: {total_return:.2f}%")
