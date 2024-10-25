@@ -327,8 +327,6 @@ class KalmanFilterEM:
         plt.show()
 
 
-import pandas as pd
-import numpy as np
 
 class MACDBacktester:
     def __init__(self, data, fast_ema, slow_ema, signal_line, signal_price = 'close', real_price = 'close',
@@ -371,7 +369,7 @@ class MACDBacktester:
         self.data['price'] = self.data[self.real_price]
         self.data['positions'] = self.data['positions'].astype(int)
         self.data['positions_diff'] = self.data['positions'].diff()
-        self.data['positions_diff'].fillna(0, inplace = True)
+        self.data['positions_diff'].fillna(0)
 
         # Initialize cash and holdings
         self.data['cash'] = self.initial_capital
@@ -384,6 +382,8 @@ class MACDBacktester:
         holdings = 0.0
         position = 0  # Current position (number of shares)
         buy_price = 0.0
+        win_count = 0  # Win rate calculation
+        total_trades = 0
 
         for idx, row in self.data.iterrows():
             position_change = row['positions_diff']
@@ -411,15 +411,18 @@ class MACDBacktester:
                 trade_return = (sell_price - buy_price)/buy_price * 100
                 self.trades.append(trade_return)
                 position = 0
+                total_trades +=1 # Win rate calculation
+                if trade_return>0:
+                    win_count +=1
             else:
                 # Hold position
                 holdings = position * price
 
 
             total = cash + holdings
-            self.data.at[idx, 'cash'] = cash
+            self.data.at[idx, 'cash'] = float(cash)
             self.data.at[idx, 'holdings'] = holdings
-            self.data.at[idx, 'total'] = total
+            self.data.at[idx, 'total'] = float(total)
 
         if position > 0 :
             price = self.data.iloc[-1]['price']
@@ -431,6 +434,9 @@ class MACDBacktester:
             trade_return = (sell_price - buy_price) / buy_price * 100
             self.trades.append(trade_return)
             position = 0
+            total_trades +=1 # Win rate calculation
+            if trade_return>0:
+                win_count +=1
             total = cash + holdings
             self.data.at[self.data.index[-1], 'cash'] = cash
             self.data.at[self.data.index[-1], 'holdings'] = holdings
@@ -439,6 +445,7 @@ class MACDBacktester:
         self.results = self.data[['cash', 'holdings', 'total']]
         self.results = self.data[['cash', 'holdings', 'total']]
 
+        self.win_rate = (win_count / total_trades * 100) if total_trades > 0 else 0
 
     def get_performance_metrics(self):
         """
@@ -448,7 +455,7 @@ class MACDBacktester:
             print("Please run backtest_strategy() before calculating performance metrics.")
             return None
 
-        total_return = (self.results['total'][-1] - self.initial_capital) / self.initial_capital * 100
+        total_return = (self.results['total'].iloc[-1] - self.initial_capital) / self.initial_capital * 100
         returns = self.results['total'].pct_change().fillna(0)
         annualized_return = ((1 + returns.mean()) ** 252 - 1) * 100  # Assuming daily returns
         annualized_volatility = returns.std() * np.sqrt(252) * 100
@@ -460,7 +467,8 @@ class MACDBacktester:
             'Annualized Return (%)': annualized_return,
             'Annualized Volatility (%)': annualized_volatility,
             'Sharpe Ratio': sharpe_ratio,
-            'Max Drawdown (%)': max_drawdown
+            'Max Drawdown (%)': max_drawdown,
+            'Win Rate (%)' : self.win_rate
         }
         return metrics
 
