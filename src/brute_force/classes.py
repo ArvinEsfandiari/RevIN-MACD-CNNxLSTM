@@ -354,13 +354,14 @@ class MACDBacktester:
         """
         Generates trading signals based on MACD crossover.
         """
-        threshold = 0.02
+        threshold = 0.1
         self.data['signal'] = 0
         self.data['signal'] = np.where((self.data['macd_line'] - self.data['signal_line']) > threshold, 1, 0) # Buy signal
         self.data['signal'] = np.where((self.data['macd_line'] - self.data['signal_line']) < -threshold, 0, self.data['signal']) # Sell signal
         # Generation the position by shifting the signals
         #self.data['positions'] = self.data['signal'].shift(1).fillna(0)
         self.data['positions'] = self.data['signal']
+        return self.data
 
     def backtest_strategy(self):
         """
@@ -403,7 +404,7 @@ class MACDBacktester:
 
             elif position_change ==-1 and position > 0: # position is the number of shares.
                 # Exit the long position
-                sell_price = price * (1-self.buy_fee_percent)
+                sell_price = price * (1-self.sell_fee_percent)
                 total_proceeds = position * sell_price
                 cash += total_proceeds
                 holdings -= position * sell_price
@@ -425,11 +426,11 @@ class MACDBacktester:
             self.data.at[idx, 'total'] = float(total)
 
         if position > 0 :
+            
             price = self.data.iloc[-1]['price']
-            sell_price = sell_price = price * shares_to_buy * (1-self.buy_fee_percent)
+            sell_price = price * (1-self.sell_fee_percent)
             total_proceeds = position * sell_price
             cash += total_proceeds
-            holdings -= position * sell_price
             # Calculate trade return
             trade_return = (sell_price - buy_price) / buy_price * 100
             self.trades.append(trade_return)
@@ -446,6 +447,7 @@ class MACDBacktester:
         self.results = self.data[['cash', 'holdings', 'total']]
 
         self.win_rate = (win_count / total_trades * 100) if total_trades > 0 else 0
+        return self.data
 
     def get_performance_metrics(self):
         """
