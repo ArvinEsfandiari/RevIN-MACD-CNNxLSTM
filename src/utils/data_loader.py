@@ -83,13 +83,13 @@ def data_cleaner(data):
 
 
 symbol = 'BTCUSD'
-timeframe = mt5.TIMEFRAME_M1  # 1-minute time frame
-start_date = datetime.datetime(2024, 10, 9)
-end_date = datetime.datetime(2024, 10, 27)
+timeframe = mt5.TIMEFRAME_M5  # 1-minute time frame
+start_date = datetime.datetime(2023, 11, 30)
+end_date = datetime.datetime(2024, 10, 30)
 
 
 # Fetch data
 data = fetch_data_from_mt5(symbol, timeframe, start_date, end_date)
 
 # Save to CSV
-save_data_to_csv(data, symbol, "1m")
+save_data_to_csv(data, symbol, "5m")
