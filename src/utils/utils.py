@@ -24,14 +24,26 @@ def TFConvertor(data, newtf):
     High = High.to_frame()
     Low = data['low'].resample(newtf).min()
     Low = Low.to_frame()
-    Volume = data['tick_volume'].resample(newtf).sum()
-    Volume = Volume.to_frame()
+    if 'tick_data' in data.columns:
+        Volume = data['tick_volume'].resample(newtf).sum()
+        Volume = Volume.to_frame()
+    if 'volume' in data.columns:
+        Volume = data['volume'].resample(newtf).sum()
+        Volume = Volume.to_frame()
+    if 'smoothed_data' in data.columns:
+        smoothed_data = data['smoothed_data'].resample(newtf).sum()
+        smoothed_data = smoothed_data.to_frame()
+    
 
     newtfdata = Open
     newtfdata['high'] = High['high']
     newtfdata['low'] = Low['low']
     newtfdata['close'] = Close['close']
-    newtfdata['tick_volume'] = Volume['tick_volume']
+    if 'tick_data' in data.columns: 
+        newtfdata['volume'] = Volume['tick_volume']
+    if 'volume' in data.columns:
+        newtfdata['volume'] = Volume['volume']
+    newtfdata['smoothed_data'] = smoothed_data['smoothed_data']
 
     # remove nan vals
     newtfdata = newtfdata.dropna()
