@@ -33,6 +33,7 @@ def TFConvertor(data, newtf):
     if 'smoothed_data' in data.columns:
         smoothed_data = data['smoothed_data'].resample(newtf).sum()
         smoothed_data = smoothed_data.to_frame()
+        newtfdata['smoothed_data'] = smoothed_data['smoothed_data']
     
 
     newtfdata = Open
@@ -43,7 +44,7 @@ def TFConvertor(data, newtf):
         newtfdata['volume'] = Volume['tick_volume']
     if 'volume' in data.columns:
         newtfdata['volume'] = Volume['volume']
-    newtfdata['smoothed_data'] = smoothed_data['smoothed_data']
+    
 
     # remove nan vals
     newtfdata = newtfdata.dropna()
