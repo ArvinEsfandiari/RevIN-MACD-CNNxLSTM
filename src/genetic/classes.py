@@ -6,7 +6,6 @@ import warnings
 
 
 # Suppress specific warnings (UserWarnings in this case)
-warnings.filterwarnings("ignore", category=UserWarning)
 
 # New backtester
 class MACDBacktester:
@@ -498,7 +497,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 
 
 class MACD_GA:
-    def __init__(self, df_train, fast_range=(1, 5), slow_range=(2, 14), signal_range=(2, 7),\
+    def __init__(self, df_train, fast_range=(1, 50), slow_range=(2, 50), signal_range=(2, 30),\
                   generations=120, population=50, mating_parents=25, real_price='close', signal_price = 'close' ):
         """"
         Find the best parameters for MACD with GA that has the best tuning.
