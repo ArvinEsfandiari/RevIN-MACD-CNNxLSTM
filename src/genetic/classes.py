@@ -648,7 +648,7 @@ class MACD_GA_v2:
         positions.ffill(inplace=True)
         positions.fillna(0, inplace=True)
 
-        data['Strategy'] = positions.shift(1) * (data['low'].pct_change())
+        data['Strategy'] = positions.shift(1) * (data['close'].pct_change())
         return data['Strategy'].cumsum().iloc[-1]
 
     def fitness_function(self, ga_instance, solution, solution_idx):
