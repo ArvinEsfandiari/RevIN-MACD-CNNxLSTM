@@ -15,7 +15,7 @@ def pad_data(data, pad_width, mode='edge'):
     return np.pad(data, pad_width, mode=mode)
 
 # Wavelet denoising function with parameterisation for wavelet type and decomposition level
-def wavelet_denoising(data, wavelet='db4', level=1):
+def wavelet_denoising(data, wavelet='db4', level=2):
     # Padding with a width of 100
     padded_data = pad_data(data, pad_width=100, mode='edge')
     # Decompose signal using Wavelet Transform
@@ -24,9 +24,11 @@ def wavelet_denoising(data, wavelet='db4', level=1):
     sigma = (1 / 0.6745) * np.median(np.abs(coeff[-level] - np.median(coeff[-level])))
     # Calculate the universal threshold
     uthresh = sigma * np.sqrt(2 * np.log(len(padded_data)))
+    # uthresh = [sigma * np.sqrt(2 * np.log(len(padded_data))) / (2 ** (i + 1)) for i in range(level)]
     # Apply soft thresholding to detail coefficients
     coeff[1:] = [pywt.threshold(i, value=uthresh, mode='soft') for i in coeff[1:]]
-    # Set high-frequency coefficients to zero
+    # coeff[1:] = [pywt.threshold(i, value=thresh, mode='soft') for i, thresh in zip(coeff[1:], uthresh)]
+    # Set high-frequency coefficients to zero ]
     coeff[-level] = np.zeros_like(coeff[-level])
     # Reconstruct the denoised signal
     denoised_data = pywt.waverec(coeff, wavelet, mode='per')
