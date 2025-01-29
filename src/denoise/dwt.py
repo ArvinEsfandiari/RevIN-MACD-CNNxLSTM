@@ -15,7 +15,7 @@ def pad_data(data, pad_width, mode='edge'):
     return np.pad(data, pad_width, mode=mode)
 
 # Wavelet denoising function with parameterisation for wavelet type and decomposition level
-def wavelet_denoising(data, wavelet='db4', level=2):
+def wavelet_denoising(data, wavelet='db4', level=4):
     # Padding with a width of 100
     padded_data = pad_data(data, pad_width=100, mode='edge')
     # Decompose signal using Wavelet Transform
