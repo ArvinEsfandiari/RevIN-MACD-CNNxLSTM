@@ -44,90 +44,51 @@ class MACDBacktester:
         return self.data
 
     def backtest_strategy(self):
-        """
-        Backtests the strategy and calculates performance metrics.
-        """
+        """ Backtests the trading strategy. """
+        self.data = self.data.copy()
         self.data['price'] = self.data[self.real_price]
-        self.data['positions'] = self.data['positions'].astype(int)
-        self.data['positions_diff'] = self.data['positions'].diff()
-        self.data['positions_diff'].fillna(0)
-
-        # Initialize cash and holdings
+        self.data['positions_diff'] = self.data['positions'].diff().fillna(0)
+        
         self.data['cash'] = self.initial_capital
         self.data['holdings'] = 0.0
         self.data['total'] = self.initial_capital
 
-
-        # Variable to keep track of cash, holdings, trades
         cash = self.initial_capital
         holdings = 0.0
-        position = 0  # Current position (number of shares)
+        position = False
         buy_price = 0.0
-        win_count = 0  # Win rate calculation
+        win_count = 0
         total_trades = 0
 
         for idx, row in self.data.iterrows():
             position_change = row['positions_diff']
             price = row['price']
-            if position_change == 1: # Long position
-                # With regard to the randomness of market, I can decide how much of cash should spend for trading.
-                shares_to_buy = round(cash/(price),8)
-                shares_to_buy = shares_to_buy * (1-self.buy_fee_percent)
 
-                if shares_to_buy > 0.00002:
-                    buy_price = round((cash/shares_to_buy),8) 
-                    total_cost = round(shares_to_buy * buy_price, 8)
-                    cash -= total_cost
-                    holdings += shares_to_buy * price
-                    position += shares_to_buy
+            if position_change == 1 and not position:  # Enter long position
+                holdings = cash * (1 - self.buy_fee_percent) / price
+                cash = 0
+                position = True
+                buy_price = price
 
-
-            elif position_change ==-1 and position > 0: # position is the number of shares.
-                # Exit the long position
-                sell_price = price * (1-self.sell_fee_percent)
-                total_proceeds = position * sell_price
-                cash += total_proceeds
-                holdings -= position * sell_price
-                # Calculate trade return
-                trade_return = (sell_price - buy_price)/buy_price * 100
+            elif position_change == -1 and position: # Exit long position
+                cash = holdings * price * (1 - self.sell_fee_percent)
+                holdings = 0
+                position = False
+                trade_return = ((price - buy_price) / buy_price) * 100
                 self.trades.append(trade_return)
-                position = 0
-                total_trades +=1 # Win rate calculation
-                if trade_return>0:
-                    win_count +=1
-            else:
-                # Hold position
-                holdings = position * price
+                total_trades += 1
+                if trade_return > 0:
+                    win_count += 1
 
-
-            total = cash + holdings
+            total = cash + (holdings * price if position else 0)
             self.data.at[idx, 'cash'] = float(cash)
-            self.data.at[idx, 'holdings'] = holdings
+            self.data.at[idx, 'holdings'] = float(holdings * price if position else 0)
             self.data.at[idx, 'total'] = float(total)
 
-        if position > 0 :
-            
-            price = self.data.iloc[-1]['price']
-            sell_price = price * (1-self.sell_fee_percent)
-            total_proceeds = position * sell_price
-            cash += total_proceeds
-            # Calculate trade return
-            trade_return = (sell_price - buy_price) / buy_price * 100
-            self.trades.append(trade_return)
-            position = 0
-            total_trades +=1 # Win rate calculation
-            if trade_return>0:
-                win_count +=1
-            total = cash + holdings
-            self.data.at[self.data.index[-1], 'cash'] = cash
-            self.data.at[self.data.index[-1], 'holdings'] = holdings
-            self.data.at[self.data.index[-1], 'total'] = total
-
         self.results = self.data[['cash', 'holdings', 'total']]
-        self.results = self.data[['cash', 'holdings', 'total']]
-
         self.win_rate = (win_count / total_trades * 100) if total_trades > 0 else 0
-        return self.data
+        return self.data, self.trades
+
 
     def get_performance_metrics(self):
         """
