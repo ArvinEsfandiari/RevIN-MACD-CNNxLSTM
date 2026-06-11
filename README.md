@@ -23,9 +23,8 @@ The pipeline has four main stages:
 ## Architecture
 
 All process architecture at a glance is as a below:
-![📄 All Process (PDF)](./src/fig/AllProcess_v2.jpg)
 
-
+![All Process](./src/fig/AllProcess_v2.jpg)
 
 As you can see, it consists of many blocks:
 1. Denoising
@@ -38,16 +37,43 @@ As you can see, it consists of many blocks:
 ### Denoising
 Although some denoising process had been tested, the best method among them was Wavelet L1 and L2 which L1 is used for Prediction Process and L2 is used for Genetic Algorithm. The process of denoising is as below:
 
-[📄 Denoising Process and Blocks (PDF)](./fig/img/Wavelet_all_v1.pdf)
+![Denoising Process and Blocks](./src/fig/Wavelet_all_v1.png)
 
 In addition, the decomposition block is shown below:
-[📄 Decomposition of wavelet (PDF)](./fig/img/Wavelet_v3.pdf)
+![Decomposition of wavelet](./src/fig/Wavelet_v3.png)
+
+You can find wavelet code [here](./src/denoise/dwt.py).
 
 
 
+### Genetic Algorithm
+As you may know, MACD indicator has 3 parameters that we want to find the best combination of them after getting each data point in stock market. In fact, this is a real time approach to adjust MACD parameters. Genetic Algorithm is shown below:
 
+![Genetic Algorithm](./src/fig/Genetic.png)
 
+Genetic algorithm code is written [here](./src/genetic/Genetic_v4_dwt.ipynb). In addition, in [./src/genetic](./src/genetic/) folder exists some other algorithm which they are for expriments.
 
+### Prediction Process
+In addition of genetic algorithm to find the best parameters for MACD, a light-weight neural network has been used to predict next price for trade approvance. Look at the below shape:
+
+![Prediction Process](./src/fig/PredictionProcess.png)
+
+As you can see in the Prediction Process, two RevIN blocks exsit for normalization and denormalization and a CNN block for feature extraction plus xLSTM block for time series prediction.
+
+All information about RevIN is available [here](https://github.com/ts-kim/RevIN). The main reason for using RevIN was getting accurate time-series forecasting against distribution shift.
+
+The CNN block with all information is shown below:
+
+![CNN](./src/fig/CNN.png)
+The main reason for using CNN architecture with skip connection idea before xLSTM block was acheiving more robust model performance.
+
+After CNN, an xLSTM block has been used which is extended version of LSTM and you can see all the information about it [here](https://github.com/nx-ai/xlstm). In addition, I have adjusted xLSTM parameters based on information from [gonzalopezgil](https://github.com/gonzalopezgil/xlstm-ts) work.
+
+You can see LSTM block in Dr. [Menhaj](https://scholar.google.com/citations?user=0EN-JbQAAAAJ&hl=en)'s notation below:
+
+![LSTM](./src/fig/LSTM_v2.png)
+
+Because of GPU limitation, code of PredictionProcess should be run in Colab. You can find it [here](./src/modelOnColab/fullPredictionModel.ipynb).
 
 ## Project Structure
 
