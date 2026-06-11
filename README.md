@@ -1,6 +1,6 @@
-# CNN-xLSTM
+# RevIN-MACD-CNNxLSTM
 
-[![GitHub](https://img.shields.io/badge/GitHub-CNN--xLSTM-black?logo=github)](https://github.com/ArvinEsfandiari/CNN-xLSTM)
+[![GitHub](https://img.shields.io/badge/GitHub-CNN--xLSTM-black?logo=github)](https://github.com/ArvinEsfandiari/RevIN-MACD-CNNxLSTM)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Jupyter](https://img.shields.io/badge/Jupyter-Notebook-orange.svg)](https://jupyter.org/)
@@ -134,8 +134,8 @@ Backtests account for exchange fees (defaults reference Nobitex maker/taker cost
 ### Installation
 
 ```bash
-git clone git@github.com:ArvinEsfandiari/CNN-xLSTM.git
-cd CNN-xLSTM
+git clone git@github.com:ArvinEsfandiari/RevIN-MACD-CNNxLSTM.git
+cd RevIN-MACD-CNNxLSTM
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
@@ -144,8 +144,8 @@ pip install -r requirements.txt
 HTTPS alternative:
 
 ```bash
-git clone https://github.com/ArvinEsfandiari/CNN-xLSTM.git
-cd CNN-xLSTM
+git clone https://github.com/ArvinEsfandiari/RevIN-MACD-CNNxLSTM.git
+cd RevIN-MACD-CNNxLSTM
 ```
 
 ### Running notebooks
@@ -171,7 +171,7 @@ Run notebooks from the `src/` directory so relative imports (e.g. `from utils.ut
 
 ## Author
 
-**Arvin** — [arvin4943@gmail.com](mailto:arvin4943@gmail.com)
+**Arvin** — [arvin.esfandyari1377@gmail.com](mailto:arvin.esfandyari1377@gmail.com)
 
 ## Disclaimer
 
