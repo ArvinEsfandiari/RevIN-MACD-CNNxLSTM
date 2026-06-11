@@ -49,7 +49,8 @@ You can find wavelet code [here](./src/denoise/dwt.py).
 ### Genetic Algorithm
 As you may know, MACD indicator has 3 parameters that we want to find the best combination of them after getting each data point in stock market. In fact, this is a real time approach to adjust MACD parameters. Genetic Algorithm is shown below:
 
-![Genetic Algorithm](./src/fig/Genetic.png)
+<!-- ![Genetic Algorithm](./src/fig/Genetic.png) -->
+<img src="./src/fig/Genetic.png" alt="Genetic Algorithm" width="500"/>
 
 Genetic algorithm code is written [here](./src/genetic/Genetic_v4_dwt.ipynb). In addition, in [./src/genetic](./src/genetic/) folder exists some other algorithm which they are for expriments.
 
