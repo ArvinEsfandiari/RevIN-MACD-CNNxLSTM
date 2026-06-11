@@ -1,2 +1,182 @@
-# Algorithmic Trading with RL
- 
+# CNN-xLSTM
+
+[![GitHub](https://img.shields.io/badge/GitHub-CNN--xLSTM-black?logo=github)](https://github.com/ArvinEsfandiari/CNN-xLSTM)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![Jupyter](https://img.shields.io/badge/Jupyter-Notebook-orange.svg)](https://jupyter.org/)
+
+**RevIN · GA-MACD · Algorithmic Trading** — hybrid CNN-xLSTM forecasting with genetic algorithm–optimized MACD for cryptocurrency markets.
+
+A research codebase for cryptocurrency time-series forecasting and algorithmic trading. It combines a hybrid **CNN-xLSTM** forecasting model with a **genetic algorithm–optimized MACD** indicator. Trades are taken only when both signals agree on direction (e.g., MACD buy + model predicts up → approved long).
+
+Primary assets: **BTC** and **ETH** on **1h** and **4h** timeframes.
+
+## Overview
+
+The pipeline has four main stages:
+
+1. **Data** — Load OHLCV data (MetaTrader 5 or CSV), resample timeframes, and optionally denoise with wavelet transforms.
+2. **MACD optimization** — Tune MACD parameters via genetic algorithms, brute-force search, or neuro-genetic hybrids.
+3. **Forecasting** — Train CNN-xLSTM (with RevIN normalization and FAN experiments) for directional price prediction.
+4. **Strategy & backtesting** — Combine optimized MACD signals with model predictions and evaluate performance.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    A[OHLCV Data\nMT5 / CSV] --> B[Resample Timeframes]
+    B --> C[Wavelet Denoising\nDWT]
+    C --> D[GA MACD Optimization\npygad]
+    D --> E[Feature Export\n.npy indicators]
+    E --> F[CNN-xLSTM Model\nRevIN + indicators]
+    F --> G[Directional Forecast]
+    D --> H[MACD Signals]
+    G --> I{Both Agree?}
+    H --> I
+    I -->|Yes| J[Execute Trade]
+    I -->|No| K[Hold / Skip]
+    J --> L[Backtest & Metrics]
+```
+
+## Project Structure
+
+```
+src/
+├── brute_force/     # Exhaustive MACD parameter search (incl. Kalman filter variants)
+├── cnn/             # CNN-xLSTM model training and evaluation notebooks
+├── data/            # Data loading and exploration
+├── denoise/         # Wavelet denoising (DWT) for signal smoothing
+├── FAN/             # Fourier Analysis Network experiments
+├── genetic/         # Genetic algorithm MACD optimization
+├── macdxlstm/       # End-to-end data prep: denoise → GA MACD → feature export
+├── strategy/        # Combined MACD + xLSTM strategy backtesting
+└── utils/           # Shared helpers (data loading, backtesting, metrics, preprocessing)
+```
+
+### Key Python modules
+
+| Module | Purpose |
+|--------|---------|
+| `utils/data_loader.py` | Fetch and save historical data from MetaTrader 5 |
+| `utils/utils.py` | Timeframe resampling (`TFConvertor`, `CreateTimeFrames`) |
+| `utils/backtester.py` | MACD strategy backtester with trading fees |
+| `utils/directional_prediction.py` | Directional classification metrics and confusion matrices |
+| `utils/coeffs2lines.py` | Convert GA MACD coefficients into indicator lines |
+| `denoise/dwt.py` | Wavelet denoising (reference: [10.1002/for.3071](https://doi.org/10.1002/for.3071)) |
+| `genetic/algorithm.py` | `MACDOptimizer` — pygad-based MACD parameter search |
+| `genetic/adaptiveGA_new.py` | Neuro-genetic hybrid (`MACDOptimizerGA_new`) |
+| `genetic/classes.py` | GA backtesters, Kalman filters, and optimizer classes |
+| `brute_force/classes.py` | MACD calculator and brute-force optimization utilities |
+| `strategy/functions.py` | MACD crossover signal generation |
+
+### Sample data
+
+Preprocessed CSV files for strategy backtesting live in `src/strategy/files/`:
+
+- `df_all_BTC_1h.csv`, `df_all_BTC_4h.csv`
+- `df_all_ETH_1h.csv`, `df_all_ETH_4h.csv`
+
+## Results
+
+> Results below are reproduced from notebook outputs. Figures are generated at runtime by `strategy/strategy_resultsOK.ipynb` and saved to `src/strategy/figs/`.
+
+### Strategy backtest — ETH 1h (`strategy/strategy_resultsOK.ipynb`)
+
+| Strategy | Total Return | Annualized Return | Sharpe | Max Drawdown | Win Rate |
+|----------|-------------:|------------------:|-------:|-------------:|---------:|
+| Optimized MACD only | 29.74% | 12.86% | 7.64 | 7.83% | 63.64% |
+| MACD + CNN-xLSTM | 29.16% | 12.70% | 6.89 | 5.91% | 82.14% |
+
+The combined strategy reduces max drawdown and raises win rate by filtering MACD signals with model agreement, at a modest cost to Sharpe ratio.
+
+**Generated figures** (after running the notebook):
+
+- `src/strategy/figs/MACD_MARKET_ETH1h.png` — optimized MACD vs. buy-and-hold
+- `src/strategy/figs/xLSTM_MACD_MARKET_ETH1h.png` — MACD-only vs. MACD + xLSTM
+
+### Model accuracy — BTC 1h (`cnn/CNNxLSTM_error.ipynb`)
+
+| Split | Accuracy |
+|-------|---------:|
+| Train | 66.36% |
+| Validation | 68.91% |
+| Test | 66.67% |
+
+Additional test metrics: Recall 67.31%, F1 Score 67.48%.
+
+## Workflow
+
+Most work is done in Jupyter notebooks. A typical end-to-end flow:
+
+1. **`data/data_loader.ipynb`** or **`utils/data_loader.py`** — acquire OHLCV data.
+2. **`macdxlstm/prepare_data.ipynb`** — wavelet denoise, run GA MACD optimization, export `.npy` features.
+3. **`cnn/cnnNetwork.ipynb`** — build features, train CNN-xLSTM, save predictions.
+4. **`strategy/macd_strategy.ipynb`** / **`strategy/strategy_resultsOK.ipynb`** — backtest MACD-only vs. MACD + xLSTM combined strategies.
+
+Exploratory and experimental notebooks are also under `genetic/`, `brute_force/`, `denoise/`, and `FAN/`.
+
+## Trading Logic
+
+Positions open or close only when **both** conditions align:
+
+- **Optimized MACD** signals a buy or sell (crossover with tuned fast/slow/signal periods).
+- **CNN-xLSTM** forecast agrees on direction (e.g., predicted price move matches signal).
+
+Backtests account for exchange fees (defaults reference Nobitex maker/taker costs in `MACDBacktester`).
+
+## Getting Started
+
+### Prerequisites
+
+- Python 3.12+
+- (Optional) MetaTrader 5 terminal for live data fetching
+
+### Installation
+
+```bash
+git clone git@github.com:ArvinEsfandiari/CNN-xLSTM.git
+cd CNN-xLSTM
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+HTTPS alternative:
+
+```bash
+git clone https://github.com/ArvinEsfandiari/CNN-xLSTM.git
+cd CNN-xLSTM
+```
+
+### Running notebooks
+
+```bash
+cd src
+jupyter notebook
+```
+
+Run notebooks from the `src/` directory so relative imports (e.g. `from utils.utils import CreateTimeFrames`) resolve correctly.
+
+> **Note:** `MetaTrader5` is only required if you fetch data via `utils/data_loader.py`. CSV-based workflows do not need it.
+
+## References
+
+| Topic | Reference |
+|-------|-----------|
+| xLSTM | Beck, M. et al. [*xLSTM: Extended Long Short-Term Memory*](https://arxiv.org/abs/2405.04517) (2024) |
+| RevIN | Kim, T. et al. [*Reversible Instance Normalization for Accurate Time-Series Forecasting against Distribution Shift*](https://openreview.net/forum?id=cGDAkQo1C0p) (ICLR 2022) |
+| FAN | [*Fourier Analysis Networks*](https://arxiv.org/abs/2410.02675) (2024) |
+| Wavelet denoising | [doi:10.1002/for.3071](https://doi.org/10.1002/for.3071) |
+| Genetic algorithm | [PyGAD](https://pygad.readthedocs.io/) — open-source GA library used for MACD parameter search |
+
+## Author
+
+**Arvin** — [arvin4943@gmail.com](mailto:arvin4943@gmail.com)
+
+## Disclaimer
+
+This repository is for **research and educational purposes only**. It is not financial advice. Cryptocurrency trading involves substantial risk of loss. Past backtest performance does not guarantee future results. Use at your own risk.
+
+## License
+
+MIT License — see [LICENSE](LICENSE). Copyright (c) 2024 Arvin.
