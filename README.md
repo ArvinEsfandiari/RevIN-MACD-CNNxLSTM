@@ -5,7 +5,7 @@
 [![Python](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Jupyter](https://img.shields.io/badge/Jupyter-Notebook-orange.svg)](https://jupyter.org/)
 
-**RevIN · GA-MACD · Algorithmic Trading** — hybrid CNN-xLSTM forecasting with genetic algorithm–optimized MACD for cryptocurrency markets.
+**Wavelet, Genetic algorithm for optimizing MACD parameters and REverse Instance Normalization(RevIN) with CNNxLSTM as a predictor** — hybrid CNN-xLSTM forecasting with genetic algorithm–optimized MACD for cryptocurrency markets.
 
 A research codebase for cryptocurrency time-series forecasting and algorithmic trading. It combines a hybrid **CNN-xLSTM** forecasting model with a **genetic algorithm–optimized MACD** indicator. Trades are taken only when both signals agree on direction (e.g., MACD buy + model predicts up → approved long).
 
@@ -15,28 +15,37 @@ Primary assets: **BTC** and **ETH** on **1h** and **4h** timeframes.
 
 The pipeline has four main stages:
 
-1. **Data** — Load OHLCV data (MetaTrader 5 or CSV), resample timeframes, and denoise with wavelet transforms (DWT). An EM-Kalman filter implementation is also available as an optional, experimental denoising method.
+1. **Data and Preprocessing** — Load OHLCV data (MetaTrader 5 or CSV), resample timeframes, and denoise with wavelet transforms (DWT). An EM-Kalman filter implementation is also available as an optional, experimental denoising method.
 2. **MACD optimization** — Tune MACD parameters via genetic algorithms, brute-force search, or neuro-genetic hybrids.
-3. **Forecasting** — Train CNN-xLSTM (with RevIN normalization and FAN experiments) for directional price prediction.
+3. **Forecasting** — Train CNN-xLSTM (with RevIN normalization) for directional price prediction. Fourier Analysis Normalization(FAN) is also implemented for expriment and comparing the results with RevIN.
 4. **Strategy & backtesting** — Combine optimized MACD signals with model predictions and evaluate performance.
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    A[OHLCV Data\nMT5 / CSV] --> B[Resample Timeframes]
-    B --> C[Wavelet Denoising\nDWT]
-    C --> D[GA MACD Optimization\npygad]
-    D --> E[Feature Export\n.npy indicators]
-    E --> F[CNN-xLSTM Model\nRevIN + indicators]
-    F --> G[Directional Forecast]
-    D --> H[MACD Signals]
-    G --> I{Both Agree?}
-    H --> I
-    I -->|Yes| J[Execute Trade]
-    I -->|No| K[Hold / Skip]
-    J --> L[Backtest & Metrics]
-```
+All process architecture at a glance is as a below:
+[📄 All Process (PDF)](./fig/img/AllProcess.pdf)
+
+As you can see, it consists of many blocks:
+1. Denoising
+    1. Wavelet(db4, L1)
+    2. Wavelet(db4, L2)
+2. Genetic Algorithm
+3. Prediction Process
+4. Adjusting MACD and strategy
+
+### Denoising
+Although some denoising process had been tested, the best method among them was Wavelet L1 and L2 which L1 is used for Prediction Process and L2 is used for Genetic Algorithm. The process of denoising is as below:
+
+[📄 Denoising Process and Blocks (PDF)](./fig/img/Wavelet_all_v1.pdf)
+
+In addition, the decomposition block is shown below:
+[📄 Decomposition of wavelet (PDF)](./fig/img/Wavelet_v3.pdf)
+
+
+
+
+
+
 
 ## Project Structure
 
