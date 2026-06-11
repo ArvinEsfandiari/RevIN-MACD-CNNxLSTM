@@ -145,29 +145,50 @@ and for ETH in 1 hour time frame is as below:
 
 > Results below are reproduced from notebook outputs. Figures are generated at runtime by `strategy/strategy_resultsOK.ipynb` and saved to `src/strategy/figs/`.
 
+### Strategy backtest — BTC 1h (`strategy/strategy_resultsOK.ipynb`)
+
+| Strategy | Total Return | Win Rate | Sharpe | Sortino Rate | Max Drawdown |
+|----------|-------------:|------------------:|-------:|-------------:|---------:|
+| Traditional MACD | 76% | 57.4% | 3.6 | 5.8 | 15.3% |
+| Optimized MACD | 318% | 67.5% | 8.6 | 17 | 8.2% |
+
 ### Strategy backtest — ETH 1h (`strategy/strategy_resultsOK.ipynb`)
 
-| Strategy | Total Return | Annualized Return | Sharpe | Max Drawdown | Win Rate |
+| Strategy | Total Return | Win Rate | Sharpe | Sortino Rate | Max Drawdown |
 |----------|-------------:|------------------:|-------:|-------------:|---------:|
-| Optimized MACD only | 29.74% | 12.86% | 7.64 | 7.83% | 63.64% |
-| MACD + CNN-xLSTM | 29.16% | 12.70% | 6.89 | 5.91% | 82.14% |
-
-The combined strategy reduces max drawdown and raises win rate by filtering MACD signals with model agreement, at a modest cost to Sharpe ratio.
+| Traditional MACD | 78% | 53% | 3.1 | 5.3 | 11.2% |
+| Optimized MACD | 417% | 66.7% | 8.6 | 16.6 | 8.2% |
 
 **Generated figures** (after running the notebook):
 
-- `src/strategy/figs/MACD_MARKET_ETH1h.png` — optimized MACD vs. buy-and-hold
-- `src/strategy/figs/xLSTM_MACD_MARKET_ETH1h.png` — MACD-only vs. MACD + xLSTM
+- `src/strategy/figs/xLSTM_MACD_MARKET_BTC1h.png` - Market strategy - MACD - MACD+xLSTM
 
-### Model accuracy — BTC 1h (`cnn/CNNxLSTM_error.ipynb`)
+<img src="./src/strategy/figs/xLSTM_MACD_MARKET_BTC1h.png" alt="BTC results in 1h time frame" width="500"/>
 
-| Split | Accuracy |
-|-------|---------:|
-| Train | 66.36% |
-| Validation | 68.91% |
-| Test | 66.67% |
 
-Additional test metrics: Recall 67.31%, F1 Score 67.48%.
+- `src/strategy/figs/xLSTM_MACD_MARKET_ETH1h.png` - Market strategy - MACD - MACD+xLSTM
+
+<img src="./src/strategy/figs/xLSTM_MACD_MARKET_ETH1h.png" alt="ETH results in 1h time frame" width="500"/>
+
+### Model Performance (`src/modelOnColab/fullPredictionModel.ipynb`)
+
+- Train and Validation Loss for 1h BTC
+
+<img src="./src/fig/res/TrainValLossBTC1H.png" alt="train and val loss 1h time frame BTC" width="500"/>
+
+- Confusion matrix for 1h BTC
+
+<img src="./src/fig/res/BTC1H_ConfusionMatrix.png" alt="confusion matrix 1h time frame BTC" width="300"/>
+
+- Train and Validation Loss for 1h ETH
+
+<img src="./src/fig/res/TrainValLossETH1h.png" alt="train and val loss 1h time frame ETH" width="500"/>
+
+- Confusion matrix for 1h ETH
+
+<img src="./src/fig/res/ETH1H_ConfusionMatrix.png" alt="confusion matrix 1h time frame ETH" width="300"/>
+
+
 
 ## Workflow
 
