@@ -23,7 +23,10 @@ The pipeline has four main stages:
 ## Architecture
 
 All process architecture at a glance is as a below:
-[📄 All Process (PDF)](./fig/img/AllProcess.pdf)
+<!-- [📄 All Process (PDF)](./fig/img/AllProcess_v2.pdf) -->
+<object data="./fig/img/AllProcess_v2.pdf" type="application/pdf" width="100%" height="700px">
+    <p>Your browser does not support embedding PDFs. <a href="./fig/img/AllProcess_v2.pdf">Download PDF instead</a>.</p>
+</object>
 
 As you can see, it consists of many blocks:
 1. Denoising
