@@ -1,0 +1,28 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Large Data & Model Weights (Don't push heavy .npy files or model states to GitHub)
+*.npy
+*.npz
+*.pt
+*.pth
+*.h5
+*.checkpoint
+
+# IDE and Editor configurations
+.idea/
+.vscode/
+# Note: Keep .cursorrules if you use it, but ignore internal workspace caches
+.editorconfig

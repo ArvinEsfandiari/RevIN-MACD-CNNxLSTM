@@ -24,7 +24,7 @@ The pipeline has four main stages:
 
 All process architecture at a glance is as a below:
 
-![All Process](./src/fig/AllProcess_v2.jpg)
+![All Process](./src/fig/AllProcess_v2.png)
 
 As you can see, it consists of many blocks:
 1. Denoising
@@ -40,7 +40,8 @@ Although some denoising process had been tested, the best method among them was 
 ![Denoising Process and Blocks](./src/fig/Wavelet_all_v1.png)
 
 In addition, the decomposition block is shown below:
-![Decomposition of wavelet](./src/fig/Wavelet_v3.png)
+<!-- ![Decomposition of wavelet](./src/fig/Wavelet_v3.png) -->
+<img src="./src/fig/Wavelet_v3.png" alt="Decomposition of wavelet" width="500"/>
 
 You can find wavelet code [here](./src/denoise/dwt.py).
 
@@ -50,14 +51,15 @@ You can find wavelet code [here](./src/denoise/dwt.py).
 As you may know, MACD indicator has 3 parameters that we want to find the best combination of them after getting each data point in stock market. In fact, this is a real time approach to adjust MACD parameters. Genetic Algorithm is shown below:
 
 <!-- ![Genetic Algorithm](./src/fig/Genetic.png) -->
-<img src="./src/fig/Genetic.png" alt="Genetic Algorithm" width="500"/>
+<img src="./src/fig/Genetic.png" alt="Genetic Algorithm" width="200"/>
 
 Genetic algorithm code is written [here](./src/genetic/Genetic_v4_dwt.ipynb). In addition, in [./src/genetic](./src/genetic/) folder exists some other algorithm which they are for expriments.
 
 ### Prediction Process
 In addition of genetic algorithm to find the best parameters for MACD, a light-weight neural network has been used to predict next price for trade approvance. Look at the below shape:
+<img src="./src/fig/PredictionProcess.png" alt="Prediction Process" width="500"/>
 
-![Prediction Process](./src/fig/PredictionProcess.png)
+<!-- ![Prediction Process](./src/fig/PredictionProcess.png) -->
 
 As you can see in the Prediction Process, two RevIN blocks exsit for normalization and denormalization and a CNN block for feature extraction plus xLSTM block for time series prediction.
 
@@ -72,7 +74,9 @@ After CNN, an xLSTM block has been used which is extended version of LSTM and yo
 
 You can see LSTM block in Dr. [Menhaj](https://scholar.google.com/citations?user=0EN-JbQAAAAJ&hl=en)'s notation below:
 
-![LSTM](./src/fig/LSTM_v2.png)
+<img src="./src/fig/LSTM_v2.png" alt="LSTM" width="500"/>
+
+<!-- ![LSTM](./src/fig/LSTM_v2.png) -->
 
 Because of GPU limitation, code of PredictionProcess should be run in Colab. You can find it [here](./src/modelOnColab/fullPredictionModel.ipynb).
 
