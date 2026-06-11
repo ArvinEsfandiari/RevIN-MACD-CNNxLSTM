@@ -1,0 +1,22 @@
+# Core data & numerics
+pandas>=2.0
+numpy>=1.24
+
+# Visualization
+matplotlib>=3.8
+seaborn>=0.13
+
+# Machine learning
+scikit-learn>=1.3
+torch>=2.0
+
+# Genetic algorithm & signal processing
+pygad>=3.0
+PyWavelets>=1.5
+
+# Data source (optional — only needed for MetaTrader 5 fetching)
+MetaTrader5>=5.0
+
+# Notebooks
+jupyter>=1.0
+ipython>=8.0
