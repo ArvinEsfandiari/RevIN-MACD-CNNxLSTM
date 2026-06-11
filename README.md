@@ -23,7 +23,7 @@ The pipeline has four main stages:
 ## Architecture
 
 All process architecture at a glance is as a below:
-[📄 All Process (PDF)](./src/fig/AllProcess_v2.jpg)
+![📄 All Process (PDF)](./src/fig/AllProcess_v2.jpg)
 
 
 
