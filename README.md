@@ -15,7 +15,7 @@ Primary assets: **BTC** and **ETH** on **1h** and **4h** timeframes.
 
 The pipeline has four main stages:
 
-1. **Data** — Load OHLCV data (MetaTrader 5 or CSV), resample timeframes, and optionally denoise with wavelet transforms.
+1. **Data** — Load OHLCV data (MetaTrader 5 or CSV), resample timeframes, and denoise with wavelet transforms (DWT). An EM-Kalman filter implementation is also available as an optional, experimental denoising method.
 2. **MACD optimization** — Tune MACD parameters via genetic algorithms, brute-force search, or neuro-genetic hybrids.
 3. **Forecasting** — Train CNN-xLSTM (with RevIN normalization and FAN experiments) for directional price prediction.
 4. **Strategy & backtesting** — Combine optimized MACD signals with model predictions and evaluate performance.
@@ -43,15 +43,27 @@ flowchart LR
 ```
 src/
 ├── brute_force/     # Exhaustive MACD parameter search (incl. Kalman filter variants)
-├── cnn/             # CNN-xLSTM model training and evaluation notebooks
+├── cnn/             # Indicator extraction and CNN-xLSTM evaluation notebooks
 ├── data/            # Data loading and exploration
-├── denoise/         # Wavelet denoising (DWT) for signal smoothing
-├── FAN/             # Fourier Analysis Network experiments
+├── denoise/         # Wavelet denoising (DWT) + optional EM-Kalman filter
+├── FAN/             # FAN-xLSTM Colab training and local result analysis
 ├── genetic/         # Genetic algorithm MACD optimization
 ├── macdxlstm/       # End-to-end data prep: denoise → GA MACD → feature export
+├── modelOnColab/    # Full wavelet → RevIN → CNN-xLSTM prediction workflow (Colab)
 ├── strategy/        # Combined MACD + xLSTM strategy backtesting
 └── utils/           # Shared helpers (data loading, backtesting, metrics, preprocessing)
 ```
+
+#### Notable notebooks
+
+| Path | Role |
+|------|------|
+| `cnn/indicatorExtractor.ipynb` | Build the feature set (wavelet-denoised OHLC, RSI, MACD, Bollinger Bands, OBV, ADX, etc.) and load GA-optimized MACD features |
+| `cnn/CNNxLSTM_error.ipynb` | Evaluate CNN-xLSTM directional prediction accuracy |
+| `cnn/CNNxLSTM_fig.ipynb` | Generate model evaluation figures |
+| `FAN/FANxLSTMModelColab.ipynb` | Train FAN-xLSTM on Google Colab; saves outputs to `fan_v1/` and `fan_v2/` |
+| `FAN/fan_v1.ipynb` | Load saved FAN-xLSTM predictions from `fan_v1/` or `fan_v2/` and analyze results locally |
+| `modelOnColab/fullPredictionModel.ipynb` | End-to-end Colab workflow: wavelet denoising → RevIN → CNN-xLSTM prediction |
 
 ### Key Python modules
 
@@ -62,7 +74,8 @@ src/
 | `utils/backtester.py` | MACD strategy backtester with trading fees |
 | `utils/directional_prediction.py` | Directional classification metrics and confusion matrices |
 | `utils/coeffs2lines.py` | Convert GA MACD coefficients into indicator lines |
-| `denoise/dwt.py` | Wavelet denoising (reference: [10.1002/for.3071](https://doi.org/10.1002/for.3071)) |
+| `denoise/dwt.py` | Wavelet denoising — used in the main pipeline (reference: [10.1002/for.3071](https://doi.org/10.1002/for.3071)) |
+| `denoise/EMkalman.py` | EM-Kalman filter denoising — optional/experimental; not wired into the main workflow |
 | `genetic/algorithm.py` | `MACDOptimizer` — pygad-based MACD parameter search |
 | `genetic/adaptiveGA_new.py` | Neuro-genetic hybrid (`MACDOptimizerGA_new`) |
 | `genetic/classes.py` | GA backtesters, Kalman filters, and optimizer classes |
@@ -106,14 +119,24 @@ Additional test metrics: Recall 67.31%, F1 Score 67.48%.
 
 ## Workflow
 
-Most work is done in Jupyter notebooks. A typical end-to-end flow:
+Most work is done in Jupyter notebooks.
+
+### Local pipeline
 
 1. **`data/data_loader.ipynb`** or **`utils/data_loader.py`** — acquire OHLCV data.
 2. **`macdxlstm/prepare_data.ipynb`** — wavelet denoise, run GA MACD optimization, export `.npy` features.
-3. **`cnn/cnnNetwork.ipynb`** — build features, train CNN-xLSTM, save predictions.
+3. **`cnn/indicatorExtractor.ipynb`** — extract technical indicators and assemble the model feature matrix.
 4. **`strategy/macd_strategy.ipynb`** / **`strategy/strategy_resultsOK.ipynb`** — backtest MACD-only vs. MACD + xLSTM combined strategies.
 
-Exploratory and experimental notebooks are also under `genetic/`, `brute_force/`, `denoise/`, and `FAN/`.
+### Colab pipelines
+
+Heavy model training is done on Google Colab and results are brought back locally:
+
+- **`modelOnColab/fullPredictionModel.ipynb`** — full prediction stack: wavelet denoising → RevIN normalization → CNN-xLSTM.
+- **`FAN/FANxLSTMModelColab.ipynb`** — trains the FAN-xLSTM model and writes predictions to `src/FAN/fan_v1/` and `src/FAN/fan_v2/`.
+- **`FAN/fan_v1.ipynb`** — loads the saved `.pt` prediction files from those folders and runs directional evaluation locally.
+
+Exploratory and experimental notebooks are also under `genetic/`, `brute_force/`, and `denoise/` (including `EMkalman.py`, which is available for integration but not used in the core pipeline).
 
 ## Trading Logic
 
