@@ -131,6 +131,16 @@ Preprocessed CSV files for strategy backtesting live in `src/strategy/files/`:
 - `df_all_BTC_1h.csv`, `df_all_BTC_4h.csv`
 - `df_all_ETH_1h.csv`, `df_all_ETH_4h.csv`
 
+Data in 1 hour time frame of BTC and ETH is shown below:
+
+<img src="./src/fig/sampleData/data_BTC_1h.png" alt="BTC sample data" width="500"/>
+
+and for ETH in 1 hour time frame is as below:
+
+<img src="./src/fig/sampleData/data_ETH_1h.png" alt="ETH sample data" width="500"/>
+
+
+
 ## Results
 
 > Results below are reproduced from notebook outputs. Figures are generated at runtime by `strategy/strategy_resultsOK.ipynb` and saved to `src/strategy/figs/`.
